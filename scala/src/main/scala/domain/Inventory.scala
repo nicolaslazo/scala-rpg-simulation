@@ -4,13 +4,11 @@ import domain.ItemSlot.*
 
 import scala.util.{Failure, Success, Try}
 
-case class Inventory(head: Option[Item],
-                     torso: Option[Item],
-                     leftHand: Option[Item],
-                     rightHand: Option[Item],
-                     neck: List[Item]) {
-    def this() = this(None, None, None, None, List())
-
+case class Inventory(head: Option[Item] = None,
+                     torso: Option[Item] = None,
+                     leftHand: Option[Item] = None,
+                     rightHand: Option[Item] = None,
+                     neck: List[Item] = List()) {
     // TODO: Hay manera de reducir el boilerplate?
     def equip(item: Item, hero: Hero): Try[Inventory] =
         if item.equipCondition(hero) then
