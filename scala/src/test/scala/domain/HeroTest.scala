@@ -1,11 +1,11 @@
 package domain
 
-import domain.ItemSlot.{Head, LeftHand, Torso}
+import domain.ItemSlot.{BothHands, Head, LeftHand, Torso}
 import domain.Stat.*
 import org.scalatest.flatspec.AnyFlatSpec
 
 import scala.collection.immutable.HashMap
-import scala.util.Try
+import scala.util.{Success, Try}
 
 class HeroTest extends AnyFlatSpec {
     "Un heroe" should "redondear stats no positivos a 1" in {
@@ -49,13 +49,18 @@ class HeroTest extends AnyFlatSpec {
     }
 
     "Un heroe" should "ser afectado por los items que tiene equipados" in {
-        val hero: Hero = Hero(baseAttributes = HashMap(Strength -> 100), job = Some(Mago))
-            .equip(CascoVikingo, Head)
-            .flatMap(_.equip(PalitoMagico, LeftHand))
-            .get
+        val hero: Try[Hero] = for {
+            baseHero <- Success(Hero(baseAttributes = HashMap(Strength -> 100), job = Some(Mago)))
+            heroWithHelmet <- baseHero.equip(CascoVikingo, Head)
+            finalHero <- heroWithHelmet.equip(PalitoMagico, LeftHand)
+        } yield finalHero
 
-        assert(hero.stat(Health) == 10) // CascoVikingo
-        assert(hero.stat(Strength) == 100 - 20) // Base - Mago
-        assert(hero.stat(Intelligence) == 20 + 20) // Mago + PalitoMagico
+        assert(hero.get.stat(Health) == 10) // CascoVikingo
+        assert(hero.get.stat(Strength) == 100 - 20) // Base - Mago
+        assert(hero.get.stat(Intelligence) == 20 + 20) // Mago + PalitoMagico
+    }
+
+    "Un heroe" should "ser afectado por items que ocupan las dos manos una sola vez" in {
+        assert(Hero().equip(ArcoViejo, BothHands).map(_.stat(Strength)).getOrElse(0) == 2)
     }
 }
