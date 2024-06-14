@@ -7,7 +7,7 @@ import scala.collection.immutable.HashMap
 
 case class Item(modifiers: StatBlock = HashMap(),
                 equipCondition: Option[Hero => Boolean] = None,
-                effect: Option[Hero => Hero] = None,
+                effect: Option[Hero => StatBlock] = None,
                 slot: ItemSlot)
 
 object CascoVikingo extends Item(
@@ -19,10 +19,11 @@ object CascoVikingo extends Item(
 object PalitoMagico extends Item(
     modifiers = HashMap(Intelligence -> 20),
     equipCondition =
-        Some(heroe => heroe.job == Mago || (heroe.job == Ladron && heroe.baseAttributes.getOrElse(Intelligence, 0) == 30)),
+        Some(heroe => heroe.job.contains(Mago) ||
+            (heroe.job.contains(Ladron) && heroe.baseAttributes.getOrElse(Intelligence, 0) == 30)),
     slot = SingleHand
 )
 
 object ArcoViejo extends Item(modifiers = HashMap(Strength -> 2), slot = BothHands)
 
-// object TalismanDeDedicacion extends Item(effect = Some())
+// object TalismanDeDedicacion extends Item(effect = Some(_.stats))
