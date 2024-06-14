@@ -1,6 +1,6 @@
 package domain
 
-import domain.ItemSlot.{BothHands, Head, LeftHand, Torso}
+import domain.ItemSlot.*
 import domain.Stat.*
 import org.scalatest.flatspec.AnyFlatSpec
 
@@ -48,7 +48,7 @@ class HeroTest extends AnyFlatSpec {
             .isSuccess)
     }
 
-    "Un heroe" should "ser afectado por los items que tiene equipados" in {
+    "Un heroe" should "tener los stats modificados por los items que tiene equipados" in {
         val hero: Try[Hero] = for {
             baseHero <- Success(Hero(baseAttributes = HashMap(Strength -> 100), job = Some(Mago)))
             heroWithHelmet <- baseHero.equip(CascoVikingo, Head)
@@ -63,4 +63,15 @@ class HeroTest extends AnyFlatSpec {
     "Un heroe" should "ser afectado por items que ocupan las dos manos una sola vez" in {
         assert(Hero().equip(ArcoViejo, BothHands).map(_.stat(Strength)).getOrElse(0) == 2)
     }
+
+    // TODO: Arreglar
+
+    //    "Un heroe" should "ser afectado por los items que equipa" in {
+    //        val mage: Hero = Hero(job = Some(Mago)).equip(TalismanDeDedicacion, Neck).get.equip(Item(slot = Neck), target = Neck).get
+    //
+    //        assert(mage.stat(Health) == 2)
+    //        assert(mage.stat(Strength) == -18)
+    //        assert(mage.stat(Speed) == 2)
+    //        assert(mage.stat(Intelligence) == 22)
+    //    }
 }

@@ -1,6 +1,7 @@
 package domain
 
 import domain.ItemSlot.*
+import domain.Stat.*
 
 import scala.collection.immutable.HashMap
 import scala.util.{Failure, Success, Try}
@@ -25,13 +26,30 @@ case class Hero private(baseAttributes: StatBlock,
     private def applyJob(startingStats: StatBlock): StatBlock =
         job.map(currentJob => applyModifiersToStats(startingStats, currentJob.modifiers)).getOrElse(startingStats)
 
-    private def applyEquipmentModifiers(attributes: StatBlock): StatBlock =
-        equipment.values.foldLeft(attributes)((stats, item) => applyModifiersToStats(stats, item.modifiers))
+    // toSet evita que los items que ocupan las dos manos se evalúen dos veces
+    private def applyItemModifiers(startingStats: StatBlock): StatBlock =
+        equipment
+            .values
+            .toSet
+            .concat(talismans)
+            .foldLeft(startingStats)((stats, item) => applyModifiersToStats(stats, item.modifiers))
+
+    private def applyItemEffects(startingStats: StatBlock): StatBlock =
+        equipment
+            .values
+            .toSet
+            .concat(talismans)
+            .flatMap(_.effect)
+            .foldLeft(startingStats)((currentStats, effectToApply) => effectToApply(currentStats, this))
 
     private def stats(): StatBlock = {
         val jobResult = applyJob(baseAttributes)
-        val equipmentResult = applyEquipmentModifiers(jobResult)
-        equipmentResult.map((stat, value) => (stat, value.max(1)))
+        val equipmentModifiersResult = applyItemModifiers(jobResult)
+        // TODO: Arreglar efectos
+        //        val equipmentEffectedResult = applyItemEffects(equipmentModifiersResult)
+        //
+        //        equipmentEffectedResult.map((stat, value) => (stat, value.max(1)))
+        equipmentModifiersResult.map((stat, value) => (stat, value.max(1)))
     }
 
     val stat: Stat => Int = stats().getOrElse(_, 1)
@@ -48,6 +66,8 @@ case class Hero private(baseAttributes: StatBlock,
             case other if other == target => Success(this.copy(equipment = equipment.updated(target, what)))
             case _ => Failure(CouldNotEquipException("No se puede equipar este item en este slot"))
         }
+
+    val equipped: Set[Item] = equipment.values.toSet.concat(talismans)
 }
 
 object Hero {
