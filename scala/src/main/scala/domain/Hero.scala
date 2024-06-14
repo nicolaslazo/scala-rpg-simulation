@@ -13,6 +13,8 @@ case class Hero private(baseAttributes: StatBlock,
                         job: Option[Job],
                         equipment: Equipment,
                         talismans: Talismans) {
+    // TODO: Handlear caso en el que se cambia de trabajo y algún equipamiento ya no se puede tener
+
     /* TODO: Hay alguna manera de hacer aplicación parcial acá?
      *  En este caso en específico habría convenido tener una clase propia para agregar el método
      *  pero las ganancias de poder usar la interfaz de `HashMap` son demasiadas
@@ -20,8 +22,8 @@ case class Hero private(baseAttributes: StatBlock,
     private def applyModifiersToStats(stats: StatBlock, modifiers: StatBlock): StatBlock =
         stats.merged(modifiers) { case ((k, v1), (_, v2)) => (k, v1 + v2) }
 
-    private def applyJob(stats: StatBlock): StatBlock =
-        job.map(currentJob => applyModifiersToStats(stats, currentJob.modifiers)).getOrElse(stats)
+    private def applyJob(startingStats: StatBlock): StatBlock =
+        job.map(currentJob => applyModifiersToStats(startingStats, currentJob.modifiers)).getOrElse(startingStats)
 
     private def applyEquipmentModifiers(attributes: StatBlock): StatBlock =
         equipment.values.foldLeft(attributes)((stats, item) => applyModifiersToStats(stats, item.modifiers))
@@ -36,9 +38,7 @@ case class Hero private(baseAttributes: StatBlock,
 
     // TODO: Hay alguna manera de simplificar el checkeo de cuello y ambas manos?
     def equip(what: Item, target: ItemSlot): Try[Hero] =
-        if !what.equipCondition.map {
-            _(this)
-        }.get then Failure(CouldNotEquipException("Este heroe no cumple las condiciones para equipar esto"))
+        if !what.equipCondition.forall(_(this)) then Failure(CouldNotEquipException("Este heroe no cumple las condiciones para equipar esto"))
         else what.slot match {
             case BothHands if target == BothHands =>
                 Success(this.copy(equipment = equipment.updated(LeftHand, what).updated(RightHand, what)))
