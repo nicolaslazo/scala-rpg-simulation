@@ -1,7 +1,6 @@
 package domain
 
 import domain.ItemSlot.*
-import domain.Stat.*
 
 import scala.collection.immutable.HashMap
 import scala.util.{Failure, Success, Try}

@@ -38,7 +38,6 @@ object TalismanDeDedicacion extends Item(
     ),
     slot = Neck)
 
-// TODO: Probablemente poco legible?
 object TalismanDelMinimalismo extends Item(
     modifiers = HashMap(Health -> 60), // +10 que lo mencionado en consigna para considerar el talisman en sí
     effect = Some((currentStats, hero) =>
@@ -52,5 +51,12 @@ object VinchaDelBufaloDeAgua extends Item(
             .getOrElse(false)
         then currentStats.updatedWith(Intelligence)(_.getOrElse(0).+(30).some)
         else currentStats.map((k, v) => if k == Intelligence then (k, v) else (k, v + 10))),
-    slot = Head
-)
+    slot = Head)
+
+object TalismanMaldito extends Item(
+    effect = Some((_, _) => HashMap(Health -> 1, Strength -> 1, Speed -> 1, Intelligence -> 1)),
+    slot = Neck)
+
+object EspadaDeLaVida extends Item(
+    effect = Some((currentStats, _) => currentStats.updated(Strength, currentStats.getOrElse(Health, 0))),
+    slot = SingleHand)
