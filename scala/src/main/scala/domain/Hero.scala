@@ -6,7 +6,6 @@ import domain.ItemSlot.*
 import scala.collection.immutable.HashMap
 import scala.util.{Failure, Success, Try}
 
-type StatBlock = HashMap[Stat, Int]
 type Equipment = HashMap[ItemSlot, Item]
 type Talismans = List[Item]
 
@@ -16,15 +15,11 @@ case class Hero private(baseAttributes: StatBlock,
                         talismans: Talismans) {
     // TODO: Handlear caso en el que se cambia de trabajo y algún equipamiento ya no se puede tener
 
-    /* TODO: Hay alguna manera de hacer aplicación parcial acá?
-     *  En este caso en específico habría convenido tener una clase propia para agregar el método
-     *  pero las ganancias de poder usar la interfaz de `HashMap` son demasiadas
-     */
-    private def applyModifiersToStats(stats: StatBlock, modifiers: StatBlock): StatBlock =
-        stats.merged(modifiers) { case ((k, v1), (_, v2)) => (k, v1 + v2) }
-
-    private def applyJob(startingStats: StatBlock): StatBlock =
-        job.map(currentJob => applyModifiersToStats(startingStats, currentJob.modifiers)).getOrElse(startingStats)
+    private def applyJobModifiers(startingStats: StatBlock): StatBlock =
+        (for {
+            currentJob <- job
+            result <- startingStats.applyModifiers(currentJob.modifiers).some
+        } yield result).getOrElse(startingStats)
 
     // toSet evita que los items que ocupan las dos manos se evalúen dos veces
     private def applyItemModifiers(startingStats: StatBlock): StatBlock =
@@ -32,7 +27,7 @@ case class Hero private(baseAttributes: StatBlock,
             .values
             .toSet
             .concat(talismans)
-            .foldLeft(startingStats)((stats, item) => applyModifiersToStats(stats, item.modifiers))
+            .foldLeft(startingStats)((stats, item) => stats.applyModifiers(item.modifiers))
 
     private def applyItemEffects(startingStats: StatBlock): StatBlock =
         equipment
@@ -43,7 +38,7 @@ case class Hero private(baseAttributes: StatBlock,
             .foldLeft(startingStats)((currentStats, effectToApply) => effectToApply(currentStats, this))
 
     private def stats(): StatBlock = {
-        val jobResult = applyJob(baseAttributes)
+        val jobResult = applyJobModifiers(baseAttributes)
         val equipmentModifiersResult = applyItemModifiers(jobResult)
         // TODO: Arreglar efectos
         //        val equipmentEffectedResult = applyItemEffects(equipmentModifiersResult)
@@ -81,6 +76,6 @@ case class Hero private(baseAttributes: StatBlock,
 }
 
 object Hero {
-    def apply(baseAttributes: StatBlock = new StatBlock(), job: Option[Job] = None): Hero =
+    def apply(baseAttributes: StatBlock = StatBlock.empty, job: Option[Job] = None): Hero =
         Hero(baseAttributes, job, equipment = new Equipment(), talismans = List())
 }

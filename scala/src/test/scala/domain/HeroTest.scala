@@ -10,7 +10,7 @@ import scala.util.{Success, Try}
 
 class HeroTest extends AnyFlatSpec {
     "Un heroe" should "redondear stats no positivos a 1" in {
-        val hero: Hero = Hero(HashMap(Health -> 2, Strength -> 1, Intelligence -> -1))
+        val hero: Hero = Hero(StatBlock(Health -> 2, Strength -> 1, Intelligence -> -1))
 
         assert(hero.stat(Health) === 2)
         assert(hero.stat(Strength) === 1)
@@ -19,7 +19,7 @@ class HeroTest extends AnyFlatSpec {
     }
 
     "Un heroe empleado" should "tener sus stats modificados" in {
-        val hero: Hero = Hero(HashMap(Health -> 1, Strength -> 2, Speed -> 3, Intelligence -> 4), Some(Guerrero))
+        val hero: Hero = Hero(StatBlock(Health -> 1, Strength -> 2, Speed -> 3, Intelligence -> 4), Some(Guerrero))
 
         assert(hero.stat(Health) === 11)
         assert(hero.stat(Strength) === 17)
@@ -32,7 +32,7 @@ class HeroTest extends AnyFlatSpec {
     }
 
     "Un heroe fuerte" should "ser capaz de equiparse el casco vikingo" in {
-        val hero: Hero = Hero(baseAttributes = HashMap(Strength -> 100))
+        val hero: Hero = Hero(baseAttributes = StatBlock(Strength -> 100))
         val equippedHero: Try[Hero] = hero.equip(CascoVikingo, Head)
 
         assert(equippedHero.isSuccess)
@@ -40,7 +40,7 @@ class HeroTest extends AnyFlatSpec {
     }
 
     "Un heroe" should "ser incapaz de equiparse un casco en el torso" in {
-        assert(Hero(baseAttributes = HashMap(Strength -> 100)).equip(CascoVikingo, Torso).isFailure)
+        assert(Hero(baseAttributes = StatBlock(Strength -> 100)).equip(CascoVikingo, Torso).isFailure)
     }
 
     "Un heroe" should "poder equipar items que checkean su trabajo" in {
@@ -51,7 +51,7 @@ class HeroTest extends AnyFlatSpec {
 
     "Un heroe" should "tener los stats modificados por los items que tiene equipados" in {
         val hero: Try[Hero] = for {
-            baseHero <- Success(Hero(baseAttributes = HashMap(Strength -> 100), job = Some(Mago)))
+            baseHero <- Success(Hero(baseAttributes = StatBlock(Strength -> 100), job = Some(Mago)))
             heroWithHelmet <- baseHero.equip(CascoVikingo, Head)
             finalHero <- heroWithHelmet.equip(PalitoMagico, LeftHand)
         } yield finalHero

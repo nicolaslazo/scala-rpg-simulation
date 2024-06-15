@@ -4,28 +4,26 @@ import cats.syntax.option.*
 import domain.ItemSlot.*
 import domain.Stat.*
 
-import scala.collection.immutable.HashMap
-
-case class Item(modifiers: StatBlock = HashMap(),
+case class Item(modifiers: StatBlock = StatBlock.empty,
                 equipCondition: Option[Hero => Boolean] = None,
                 effect: Option[(StatBlock, Hero) => StatBlock] = None,
                 slot: ItemSlot)
 
 object CascoVikingo extends Item(
-    modifiers = HashMap(Health -> 10),
+    modifiers = StatBlock(Health -> 10),
     equipCondition = Some(_.baseAttributes.getOrElse(Strength, 0) > 30),
     slot = Head
 )
 
 object PalitoMagico extends Item(
-    modifiers = HashMap(Intelligence -> 20),
+    modifiers = StatBlock(Intelligence -> 20),
     equipCondition =
         Some(heroe => heroe.job.contains(Mago) ||
             (heroe.job.contains(Ladron) && heroe.baseAttributes.getOrElse(Intelligence, 0) == 30)),
     slot = SingleHand
 )
 
-object ArcoViejo extends Item(modifiers = HashMap(Strength -> 2), slot = BothHands)
+object ArcoViejo extends Item(modifiers = StatBlock(Strength -> 2), slot = BothHands)
 
 object TalismanDeDedicacion extends Item(
     effect = Some(
@@ -39,7 +37,7 @@ object TalismanDeDedicacion extends Item(
     slot = Neck)
 
 object TalismanDelMinimalismo extends Item(
-    modifiers = HashMap(Health -> 60), // +10 que lo mencionado en consigna para considerar el talisman en sí
+    modifiers = StatBlock(Health -> 60), // +10 que lo mencionado en consigna para considerar el talisman en sí
     effect = Some((currentStats, hero) =>
         currentStats.updatedWith(Health)(value => Some(value.getOrElse(0).-(10 * hero.equippedItems.size)))),
     slot = Neck)
@@ -54,7 +52,7 @@ object VinchaDelBufaloDeAgua extends Item(
     slot = Head)
 
 object TalismanMaldito extends Item(
-    effect = Some((_, _) => HashMap(Health -> 1, Strength -> 1, Speed -> 1, Intelligence -> 1)),
+    effect = Some((_, _) => StatBlock(Health -> 1, Strength -> 1, Speed -> 1, Intelligence -> 1)),
     slot = Neck)
 
 object EspadaDeLaVida extends Item(
