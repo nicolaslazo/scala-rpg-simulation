@@ -15,21 +15,17 @@ case class Hero private(baseAttributes: StatBlock,
                         talismans: Talismans) {
     // TODO: Handlear caso en el que se cambia de trabajo y algún equipamiento ya no se puede tener
 
-    private def applyJobModifiers(startingStats: StatBlock): StatBlock =
-        (for {
-            currentJob <- job
-            result <- startingStats.applyModifiers(currentJob.modifiers).some
-        } yield result).getOrElse(startingStats)
-
+    // Los modifiers se pueden stackear sin conocer el contexto del cálculo general
     // toSet evita que los items que ocupan las dos manos se evalúen dos veces
-    private def applyItemModifiers(startingStats: StatBlock): StatBlock =
+    private def itemModifiers(): StatBlock =
         equipment
             .values
             .toSet
             .concat(talismans)
-            .foldLeft(startingStats)((stats, item) => stats.applyModifiers(item.modifiers))
+            .foldLeft(StatBlock.empty)((stats, item) => stats.applyModifiers(item.modifiers))
 
     private def applyItemEffects(startingStats: StatBlock): StatBlock =
+        // TODO: Aplicar al cálculo de stats
         equipment
             .values
             .toSet
@@ -37,15 +33,11 @@ case class Hero private(baseAttributes: StatBlock,
             .flatMap(_.effect)
             .foldLeft(startingStats)((currentStats, effectToApply) => effectToApply(currentStats, this))
 
-    private def stats(): StatBlock = {
-        val jobResult = applyJobModifiers(baseAttributes)
-        val equipmentModifiersResult = applyItemModifiers(jobResult)
-        // TODO: Arreglar efectos
-        //        val equipmentEffectedResult = applyItemEffects(equipmentModifiersResult)
-        //
-        //        equipmentEffectedResult.map((stat, value) => (stat, value.max(1)))
-        equipmentModifiersResult.map((stat, value) => (stat, value.max(1)))
-    }
+    private def stats(): StatBlock =
+        baseAttributes
+            .applyModifiers(job.map(_.modifiers).getOrElse(StatBlock.empty))
+            .applyModifiers(itemModifiers())
+            .map((stat, value) => (stat, value.max(1)))
 
     val stat: Stat => Int = stats().getOrElse(_, 1)
 
