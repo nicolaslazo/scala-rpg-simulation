@@ -9,7 +9,7 @@ object StatBlock {
 
     // TODO: Terminar de entender esta sintaxis
     def apply(entries: (Stat, Int)*): StatBlock = HashMap(entries: _*)
-    
+
     val empty: StatBlock = apply()
 }
 
@@ -19,4 +19,10 @@ extension (statBlock: StatBlock) {
 
     def applyModifiers(modifiers: StatBlock): StatBlock =
         statBlock.merged(modifiers) { case ((k, v1), (_, v2)) => (k, v1 + v2) }
+
+    def applyEffect(effect: (StatBlock, Hero) => StatBlock, context: Hero): StatBlock = effect(statBlock, context)
+
+    // TODO: Siento que esto se podría simplificar pero estoy cansado
+    def applyEffects(effects: Iterable[(StatBlock, Hero) => StatBlock], context: Hero): StatBlock =
+        effects.foldLeft(statBlock)((stats, effect) => stats.applyEffect(effect, context))
 }

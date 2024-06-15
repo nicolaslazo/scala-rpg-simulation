@@ -29,7 +29,8 @@ object TalismanDeDedicacion extends Item(
     effect = Some(
         (currentStats, hero) => {
             // TODO: Hay alguna manera más idiomática de escribir esto?
-            val bonus: Int = hero.job.map(_.mainStat).flatMap(currentStats.get).map(_ * .1).map(_.toInt).getOrElse(0)
+//            val bonus: Int = hero.job.map(_.mainStat).map(currentStats.getStat).map(_ * .1).map(_.toInt).getOrElse(0)
+            val bonus: Int = hero.mainStat.map(_._2).getOrElse(0)
 
             currentStats.map((stat, value) => (stat, value + bonus))
         }

@@ -15,31 +15,30 @@ case class Hero private(baseAttributes: StatBlock,
                         talismans: Talismans) {
     // TODO: Handlear caso en el que se cambia de trabajo y algún equipamiento ya no se puede tener
 
+    // TODO: Delegar el folding a StatBlock
     // Los modifiers se pueden stackear sin conocer el contexto del cálculo general
     // toSet evita que los items que ocupan las dos manos se evalúen dos veces
-    private def itemModifiers(): StatBlock =
+    private def itemModifiers: StatBlock =
         equipment
             .values
             .toSet
+            .toList
             .concat(talismans)
-            .foldLeft(StatBlock.empty)((stats, item) => stats.applyModifiers(item.modifiers))
+            .map(_.modifiers)
+            .foldLeft(StatBlock.empty)((one, other) => one.applyModifiers(other))
 
-    private def applyItemEffects(startingStats: StatBlock): StatBlock =
-        // TODO: Aplicar al cálculo de stats
-        equipment
-            .values
-            .toSet
-            .concat(talismans)
-            .flatMap(_.effect)
-            .foldLeft(startingStats)((currentStats, effectToApply) => effectToApply(currentStats, this))
+    // TODO: Aplicar al cálculo de stats
+    private def itemEffects: List[(StatBlock, Hero) => StatBlock] =
+        equipment.values.toSet.toList.concat(talismans).flatMap(_.effect)
 
-    private def stats(): StatBlock =
+    private def stats: StatBlock =
         baseAttributes
             .applyModifiers(job.map(_.modifiers).getOrElse(StatBlock.empty))
-            .applyModifiers(itemModifiers())
+            .applyModifiers(itemModifiers)
+            .applyEffects(itemEffects, this)
             .map((stat, value) => (stat, value.max(1)))
 
-    val stat: Stat => Int = stats().getOrElse(_, 1)
+    val stat: Stat => Int = stats.getOrElse(_, 1)
 
     // TODO: Hay alguna manera de simplificar el checkeo de cuello y ambas manos?
     def equip(what: Item, target: ItemSlot): Try[Hero] =
@@ -60,7 +59,7 @@ case class Hero private(baseAttributes: StatBlock,
     val equippedItems: Set[Item] = equipment.values.toSet.concat(talismans)
 
     // TODO: Es janky ese unwrapping y wrapping la línea siguiente?
-    val mainStat: Option[(Stat, Int)] = for {
+    def mainStat: Option[(Stat, Int)] = for {
         unwrappedJob <- job
         jobMainStat <- unwrappedJob.mainStat.some
         points = stat(jobMainStat)

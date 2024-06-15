@@ -73,16 +73,17 @@ class HeroTest extends AnyFlatSpec {
         } yield heroWithSword.equipment.contains(RightHand)).get)
     }
 
-    // TODO: Arreglar
+    "Un heroe" should "ser afectado por los items que equipa" in {
+        val mage = Hero(job = Mago.some)
+            .equip(TalismanDeDedicacion, Neck)
+            .flatMap(_.equip(Item(slot = Neck), target = Neck))
+            .get
 
-    //    "Un heroe" should "ser afectado por los items que equipa" in {
-    //        val mage: Hero = Hero(job = Some(Mago)).equip(TalismanDeDedicacion, Neck).get.equip(Item(slot = Neck), target = Neck).get
-    //
-    //        assert(mage.stat(Health) == 2)
-    //        assert(mage.stat(Strength) == -18)
-    //        assert(mage.stat(Speed) == 2)
-    //        assert(mage.stat(Intelligence) == 22)
-    //    }
+        assert(mage.stat(Health) == 2)
+        assert(mage.stat(Strength) == -18)
+        assert(mage.stat(Speed) == 2)
+        assert(mage.stat(Intelligence) == 22)
+    }
 
     "Un heroe" should "poder reportar su stat principal" in {
         assert(Hero(job = Guerrero.some).mainStat.get == (Strength, 15))
