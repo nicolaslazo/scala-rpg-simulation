@@ -64,6 +64,14 @@ class HeroTest extends AnyFlatSpec {
         assert(Hero().equip(ArcoViejo, BothHands).map(_.stat(Strength)).getOrElse(0) == 2)
     }
 
+    "Un heroe" should "desequipar cualquier item que requiere dos manos cuando se equipa uno de una sola" in {
+        assert(!(for {
+            hero <- Try(Hero())
+            heroWithBow <- hero.equip(ArcoViejo, BothHands)
+            heroWithSword <- heroWithBow.equip(EspadaDeLaVida, LeftHand)
+        } yield heroWithSword.equipment.contains(RightHand)).get)
+    }
+
     // TODO: Arreglar
 
     //    "Un heroe" should "ser afectado por los items que equipa" in {

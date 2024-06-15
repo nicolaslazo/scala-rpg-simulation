@@ -55,12 +55,15 @@ case class Hero private(baseAttributes: StatBlock,
 
     // TODO: Hay alguna manera de simplificar el checkeo de cuello y ambas manos?
     def equip(what: Item, target: ItemSlot): Try[Hero] =
-        if !what.equipCondition.forall(_(this)) then Failure(CouldNotEquipException("Este heroe no cumple las condiciones para equipar esto"))
+        if !what.equipCondition.forall(_(this))
+        then Failure(CouldNotEquipException("Este heroe no cumple las condiciones para equipar esto"))
         else what.slot match {
             case BothHands if target == BothHands =>
                 Success(this.copy(equipment = equipment.updated(LeftHand, what).updated(RightHand, what)))
-            case SingleHand if target == LeftHand => Success(this.copy(equipment = equipment.updated(LeftHand, what)))
-            case SingleHand if target == RightHand => Success(this.copy(equipment = equipment.updated(RightHand, what)))
+            case SingleHand if target == LeftHand => Success(
+                this.copy(equipment = equipment.filterNot((_, item) => item.slot == BothHands).updated(LeftHand, what)))
+            case SingleHand if target == RightHand => Success(
+                this.copy(equipment = equipment.filterNot((_, item) => item.slot == BothHands).updated(RightHand, what)))
             case Neck if target == Neck => Success(this.copy(talismans = what :: talismans))
             case other if other == target => Success(this.copy(equipment = equipment.updated(target, what)))
             case _ => Failure(CouldNotEquipException("No se puede equipar este item en este slot"))
