@@ -41,7 +41,7 @@ object TalismanDeDedicacion extends Item(
 object TalismanDelMinimalismo extends Item(
     modifiers = HashMap(Health -> 60), // +10 que lo mencionado en consigna para considerar el talisman en sí
     effect = Some((currentStats, hero) =>
-        currentStats.updatedWith(Health)(value => Some(value.getOrElse(0).-(10 * hero.equipped.size)))),
+        currentStats.updatedWith(Health)(value => Some(value.getOrElse(0).-(10 * hero.equippedItems.size)))),
     slot = Neck)
 
 object VinchaDelBufaloDeAgua extends Item(

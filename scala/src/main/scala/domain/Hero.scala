@@ -1,5 +1,6 @@
 package domain
 
+import cats.syntax.option.*
 import domain.ItemSlot.*
 
 import scala.collection.immutable.HashMap
@@ -69,7 +70,14 @@ case class Hero private(baseAttributes: StatBlock,
             case _ => Failure(CouldNotEquipException("No se puede equipar este item en este slot"))
         }
 
-    val equipped: Set[Item] = equipment.values.toSet.concat(talismans)
+    val equippedItems: Set[Item] = equipment.values.toSet.concat(talismans)
+
+    // TODO: Es janky ese unwrapping y wrapping la línea siguiente?
+    val mainStat: Option[(Stat, Int)] = for {
+        unwrappedJob <- job
+        jobMainStat <- unwrappedJob.mainStat.some
+        points = stat(jobMainStat)
+    } yield (jobMainStat, points)
 }
 
 object Hero {

@@ -1,5 +1,6 @@
 package domain
 
+import cats.syntax.option.*
 import domain.ItemSlot.*
 import domain.Stat.*
 import org.scalatest.flatspec.AnyFlatSpec
@@ -82,4 +83,8 @@ class HeroTest extends AnyFlatSpec {
     //        assert(mage.stat(Speed) == 2)
     //        assert(mage.stat(Intelligence) == 22)
     //    }
+
+    "Un heroe" should "poder reportar su stat principal" in {
+        assert(Hero(job = Guerrero.some).mainStat.get == (Strength, 15))
+    }
 }
