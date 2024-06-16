@@ -31,16 +31,15 @@ case class Hero private(baseAttributes: StatBlock,
     private def itemEffects: List[(StatBlock, Hero) => StatBlock] =
         equipment.values.toSet.toList.concat(talismans).flatMap(_.effect)
 
-    private def stats: StatBlock =
+    private lazy val stats: StatBlock =
         baseAttributes
             .applyModifiers(job.map(_.modifiers).getOrElse(StatBlock.empty))
             .applyModifiers(itemModifiers)
             .applyEffects(itemEffects, this)
             .map((stat, value) => (stat, value.max(1)))
 
-    val stat: Stat => Int = stats.getOrElse(_, 1)
+    lazy val stat: Stat => Int = stats.getOrElse(_, 1)
 
-    // TODO: Hay alguna manera de simplificar el checkeo de cuello y ambas manos?
     def equip(what: Item, target: ItemSlot): Try[Hero] =
         if !what.equipCondition.forall(_(this))
         then Failure(CouldNotEquipException("Este heroe no cumple las condiciones para equipar esto"))
@@ -51,6 +50,8 @@ case class Hero private(baseAttributes: StatBlock,
                 this.copy(equipment = equipment.filterNot((_, item) => item.slot == BothHands).updated(LeftHand, what)))
             case SingleHand if target == RightHand => Success(
                 this.copy(equipment = equipment.filterNot((_, item) => item.slot == BothHands).updated(RightHand, what)))
+            case SingleHand if target == SingleHand =>
+                Failure(CouldNotEquipException("Items de SingleHand se tienen que equipar o en LeftHand o RightHand"))
             case Neck if target == Neck => Success(this.copy(talismans = what :: talismans))
             case other if other == target => Success(this.copy(equipment = equipment.updated(target, what)))
             case _ => Failure(CouldNotEquipException("No se puede equipar este item en este slot"))
@@ -58,12 +59,14 @@ case class Hero private(baseAttributes: StatBlock,
 
     val equippedItems: Set[Item] = equipment.values.toSet.concat(talismans)
 
-    // TODO: Es janky ese unwrapping y wrapping la línea siguiente?
-    def mainStat: Option[(Stat, Int)] = for {
+    lazy val mainStatPoints: Option[Int] = for {
         unwrappedJob <- job
         jobMainStat <- unwrappedJob.mainStat.some
         points = stat(jobMainStat)
-    } yield (jobMainStat, points)
+    } yield points
+
+    def mainStatPointsWithItemEquipped(item: Item, slot: ItemSlot): Option[Int] =
+        this.equip(item, slot).toOption.flatMap(hero => hero.mainStatPoints)
 }
 
 object Hero {

@@ -36,6 +36,18 @@ object TalismanDeDedicacion extends Item(
         }
     ),
     slot = Neck)
+// TODO: Arreglar
+//object TalismanDeDedicacion extends Item(
+//    effect = Some(
+//        (currentStats, hero) => {
+//            // TODO: Hay alguna manera más idiomática de escribir esto?
+//            //            val bonus: Int = hero.job.map(_.mainStat).map(currentStats.getStat).map(_ * .1).map(_.toInt).getOrElse(0)
+////            val bonus: Int = hero.mainStatPoints.map(_._2).getOrElse(0)
+//
+////            currentStats.map((stat, value) => (stat, value + bonus))
+//        }
+//    ),
+//    slot = Neck)
 
 object TalismanDelMinimalismo extends Item(
     modifiers = StatBlock(Health -> 60), // +10 que lo mencionado en consigna para considerar el talisman en sí
