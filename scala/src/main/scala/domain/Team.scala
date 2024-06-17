@@ -1,59 +1,43 @@
 package domain
 
 import domain.equipment.ItemSlot.{LeftHand, RightHand, SingleHand}
-import domain.equipment.{Item, ItemSlot}
+import domain.equipment.{EquipProjection, Item, ItemSlot}
 
 import scala.collection.immutable.HashMap
 
-case class Team(name: String, earnings: Int = 0, members: Set[Hero] = Set()) {
+case class Team(name: String, members: Set[Hero] = Set(), earnings: Int = 0) {
     val bestMember: (Hero => Int) => Option[Hero] = members.maxByOption
 
     private def membersThatCanEquip(item: Item): Set[Hero] =
         item.equipCondition.map(condition => members.filter(condition)).getOrElse(members)
 
     private def membersAndMainStats(people: Set[Hero]): HashMap[Hero, Int] =
+        // TODO: BORRAR?
         // TODO: Entender notación _*
         HashMap(members.flatMap(hero => hero.mainStatPoints.map(hero -> _)).toSeq: _*)
 
-    private def membersAndMainStatsWithItemEquipped(people: Set[Hero], item: Item): HashMap[Hero, (Int, ItemSlot)] = {
+    private def memberEquipProjections(people: Set[Hero], item: Item): HashMap[Hero, EquipProjection] = {
         if item.slot == SingleHand then {
-            val leftHandOutcome = membersAndMainStatsWithItemEquipped(people, item.copy(slot = LeftHand))
-            val rightHandOutcome = membersAndMainStatsWithItemEquipped(people, item.copy(slot = RightHand))
+            val leftHandOutcome = memberEquipProjections(people, item.copy(slot = LeftHand))
+            val rightHandOutcome = memberEquipProjections(people, item.copy(slot = RightHand))
 
             return leftHandOutcome.merged(rightHandOutcome) {
-                case ((hero, leftHandEquipMainStat), (_, rightHandEquipMainStat))
-                    if leftHandEquipMainStat._1 >= rightHandEquipMainStat._1 => hero -> leftHandEquipMainStat
-                case ((hero, leftHandEquipMainStat), (_, rightHandEquipMainStat)) => hero -> rightHandEquipMainStat
+                case ((hero, leftHandProjection), (_, rightHandProjection)) =>
+                    (hero, leftHandProjection.max(rightHandProjection))
             }
         }
 
-        HashMap(
-            members
-                .map(hero => hero -> (hero.mainStatPointsWithItemEquipped(item, item.slot).get, item.slot))
-                .toSeq: _*)
+        HashMap(people.map(hero => hero -> hero.withItemEquippedProjection(item, item.slot).get).toSeq: _*)
     }
 
-    private def memberStatDeltas(oldStats: HashMap[Hero, Int], newStats: HashMap[Hero, (Int, ItemSlot)]): HashMap[Hero, (Int, ItemSlot)] =
-        // TODO: Borrar código descartado si el otro funciona
-        //        oldStats.merged(newStats) {
-        //            case ((hero, valueWithoutItem), (_, valueWithItem: Int, itemSlot: ItemSlot)) =>
-        //                hero -> (valueWithItem - valueWithoutItem, itemSlot)
-        //        }
-        newStats.collect {
-            case (hero: Hero, (newStat: Int, itemSlot: ItemSlot)) if oldStats.contains(hero) => (hero, (newStat - oldStats(hero), itemSlot))
-        }
-
-    // TODO: Handlear caso de SingleHand
     def getItem(item: Item): Team = {
         val membersToCheck: Set[Hero] = membersThatCanEquip(item)
-        val statsWithoutItem: HashMap[Hero, Int] = membersAndMainStats(membersToCheck)
-        val statsWithItem: HashMap[Hero, (Int, ItemSlot)] = membersAndMainStatsWithItemEquipped(membersToCheck, item)
-        val statDeltas: HashMap[Hero, (Int, ItemSlot)] = memberStatDeltas(statsWithoutItem, statsWithItem)
-        val bestCandidate: Option[(Hero, ItemSlot)] =
-            statDeltas.filter(_._2._1 > 0).maxByOption(_._2._1).map(candidate => candidate._1 -> candidate._2._2)
+        val equipProjections: HashMap[Hero, EquipProjection] = memberEquipProjections(membersToCheck, item)
+        val bestCandidate: Option[EquipProjection] =
+            equipProjections.values.filter(_.pointsDelta > 0).maxByOption(_.pointsDelta)
 
         bestCandidate match {
-            case Some((hero, slot)) => this.copy(members = members - hero + hero.equip(item, slot).get)
+            case Some(projection) => this.copy(members = members - projection.preEquipHero + projection.postEquipHero)
             case None => this.copy(earnings = earnings + item.value)
         }
     }
