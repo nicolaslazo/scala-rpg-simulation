@@ -1,5 +1,7 @@
 package domain
 
+import domain.ItemSlot.{LeftHand, RightHand, SingleHand}
+
 import scala.collection.immutable.HashMap
 
 case class Team(name: String, earnings: Int = 0, members: Set[Hero] = Set()) {
@@ -13,12 +15,21 @@ case class Team(name: String, earnings: Int = 0, members: Set[Hero] = Set()) {
         HashMap(members.flatMap(hero => hero.mainStatPoints.map(hero -> _)).toSeq: _*)
 
     private def membersAndMainStatsWithItemEquipped(people: Set[Hero], item: Item): HashMap[Hero, (Int, ItemSlot)] = {
-        item.slot match {
-            case _ => HashMap(
-                members
-                    .map(hero => hero -> (hero.mainStatPointsWithItemEquipped(item, item.slot).get, item.slot))
-                    .toSeq: _*)
+        if item.slot == SingleHand then {
+            val leftHandOutcome = membersAndMainStatsWithItemEquipped(people, item.copy(slot = LeftHand))
+            val rightHandOutcome = membersAndMainStatsWithItemEquipped(people, item.copy(slot = RightHand))
+
+            return leftHandOutcome.merged(rightHandOutcome) {
+                case ((hero, leftHandEquipMainStat), (_, rightHandEquipMainStat))
+                    if leftHandEquipMainStat._1 >= rightHandEquipMainStat._1 => hero -> leftHandEquipMainStat
+                case ((hero, leftHandEquipMainStat), (_, rightHandEquipMainStat)) => hero -> rightHandEquipMainStat
+            }
         }
+
+        HashMap(
+            members
+                .map(hero => hero -> (hero.mainStatPointsWithItemEquipped(item, item.slot).get, item.slot))
+                .toSeq: _*)
     }
 
     private def memberStatDeltas(oldStats: HashMap[Hero, Int], newStats: HashMap[Hero, (Int, ItemSlot)]): HashMap[Hero, (Int, ItemSlot)] =
