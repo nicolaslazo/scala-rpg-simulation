@@ -1,9 +1,9 @@
 package domain
 
 import cats.syntax.option.*
-import domain.equipment.ItemSlot.*
 import domain.Stat.*
-import domain.equipment.{ArcoViejo, CascoVikingo, EspadaDeLaVida, Item, PalitoMagico}
+import domain.equipment.ItemSlot.*
+import domain.equipment.*
 import org.scalatest.flatspec.AnyFlatSpec
 
 import scala.collection.immutable.HashMap

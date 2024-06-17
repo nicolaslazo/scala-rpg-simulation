@@ -16,30 +16,22 @@ case class Hero private(baseAttributes: StatBlock,
                         talismans: Talismans) {
     // TODO: Handlear caso en el que se cambia de trabajo y algún equipamiento ya no se puede tener
 
-    // TODO: Delegar el folding a StatBlock
-    // Los modifiers se pueden stackear sin conocer el contexto del cálculo general
-    // toSet evita que los items que ocupan las dos manos se evalúen dos veces
-    private def itemModifiers: StatBlock =
-        equipment
-            .values
-            .toSet
-            .toList
-            .concat(talismans)
-            .map(_.modifiers)
-            .foldLeft(StatBlock.empty)((one, other) => one.applyModifiers(other))
-
-    // TODO: Aplicar al cálculo de stats
-    private def itemEffects: List[(StatBlock, Hero) => StatBlock] =
-        equipment.values.toSet.toList.concat(talismans).flatMap(_.effect)
-
+    lazy val stat: Stat => Int = stats.getOrElse(_, 1)
+    lazy val mainStatPoints: Option[Int] = for {
+        unwrappedJob <- job
+        jobMainStat <- unwrappedJob.mainStat.some
+        points = stat(jobMainStat)
+    } yield points
     private lazy val stats: StatBlock =
         baseAttributes
             .applyModifiers(job.map(_.modifiers).getOrElse(StatBlock.empty))
             .applyModifiers(itemModifiers)
             .applyEffects(itemEffects, this)
             .map((stat, value) => (stat, value.max(1)))
+    val equippedItems: Set[Item] = equipment.values.toSet.concat(talismans)
 
-    lazy val stat: Stat => Int = stats.getOrElse(_, 1)
+    def withItemEquippedProjection(item: Item, slot: ItemSlot): Try[EquipProjection] =
+        this.equip(item, slot).map(EquipProjection(this, _, slot))
 
     def equip(what: Item, target: ItemSlot): Try[Hero] =
         if !what.equipCondition.forall(_(this))
@@ -58,16 +50,21 @@ case class Hero private(baseAttributes: StatBlock,
             case _ => Failure(CouldNotEquipException("No se puede equipar este item en este slot"))
         }
 
-    val equippedItems: Set[Item] = equipment.values.toSet.concat(talismans)
+    // TODO: Delegar el folding a StatBlock
+    // Los modifiers se pueden stackear sin conocer el contexto del cálculo general
+    // toSet evita que los items que ocupan las dos manos se evalúen dos veces
+    private def itemModifiers: StatBlock =
+        equipment
+            .values
+            .toSet
+            .toList
+            .concat(talismans)
+            .map(_.modifiers)
+            .foldLeft(StatBlock.empty)((one, other) => one.applyModifiers(other))
 
-    lazy val mainStatPoints: Option[Int] = for {
-        unwrappedJob <- job
-        jobMainStat <- unwrappedJob.mainStat.some
-        points = stat(jobMainStat)
-    } yield points
-
-    def withItemEquippedProjection(item: Item, slot: ItemSlot): Try[EquipProjection] =
-        this.equip(item, slot).map(EquipProjection(this, _, slot))
+    // TODO: Aplicar al cálculo de stats
+    private def itemEffects: List[(StatBlock, Hero) => StatBlock] =
+        equipment.values.toSet.toList.concat(talismans).flatMap(_.effect)
 }
 
 object Hero {
