@@ -29,8 +29,10 @@ case class Team(name: String, members: Set[Hero] = Set(), earnings: Int = 0) {
     }
 
     def getItem(item: Item): Team = {
-        val membersToCheck: Set[Hero] = membersThatCanEquip(item)
-        val equipProjections: HashMap[Hero, EquipProjection] = memberEquipProjections(membersToCheck, item, item.slot)
+        val equipProjections: HashMap[Hero, EquipProjection] = memberEquipProjections(
+            membersThatCanEquip(item),
+            item,
+            item.slot)
         val bestCandidate: Option[EquipProjection] =
             equipProjections.values.filter(_.pointsDelta > 0).maxByOption(_.pointsDelta)
 
