@@ -2,7 +2,7 @@ package domain
 
 import cats.syntax.option.*
 import domain.equipment.ItemSlot.*
-import domain.equipment.{CouldNotEquipException, Item, ItemSlot}
+import domain.equipment.{CouldNotEquipException, EquipProjection, Item, ItemSlot}
 
 import scala.collection.immutable.HashMap
 import scala.util.{Failure, Success, Try}
@@ -66,8 +66,8 @@ case class Hero private(baseAttributes: StatBlock,
         points = stat(jobMainStat)
     } yield points
 
-    def mainStatPointsWithItemEquipped(item: Item, slot: ItemSlot): Option[Int] =
-        this.equip(item, slot).toOption.flatMap(hero => hero.mainStatPoints)
+    def withItemEquippedProjection(item: Item, slot: ItemSlot): Try[EquipProjection] =
+        this.equip(item, slot).map(EquipProjection(this, _, slot))
 }
 
 object Hero {

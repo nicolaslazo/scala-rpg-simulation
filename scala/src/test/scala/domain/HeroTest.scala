@@ -96,6 +96,6 @@ class HeroTest extends AnyFlatSpec {
     }
 
     "Un heroe" should "poder reportar cómo quedaría su stat principal si se equipa un item" in {
-        assert(mage.mainStatPointsWithItemEquipped(PalitoMagico, LeftHand).get == 40)
+        assert(mage.withItemEquippedProjection(PalitoMagico, LeftHand).get.pointsProjection == 40)
     }
 }
