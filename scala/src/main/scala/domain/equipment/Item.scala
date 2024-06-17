@@ -14,6 +14,7 @@ case class Item(modifiers: StatBlock = StatBlock.empty,
 object CascoVikingo extends Item(
     modifiers = StatBlock(Health -> 10),
     equipCondition = Some(_.baseAttributes.getOrElse(Strength, 0) > 30),
+    value = 100,
     slot = Head
 )
 
