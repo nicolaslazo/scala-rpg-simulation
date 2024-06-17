@@ -2,9 +2,11 @@ package domain
 
 import cats.syntax.option.*
 import domain.Stat.*
-import domain.equipment.ItemSlot.{LeftHand, RightHand, SingleHand}
+import domain.equipment.ItemSlot.{Head, LeftHand, RightHand, SingleHand}
 import domain.equipment.{CascoVikingo, Item}
 import org.scalatest.flatspec.AnyFlatSpec
+
+val mage: Hero = Hero(job = Mago.some)
 
 class TeamTest extends AnyFlatSpec {
     "Un equipo" should "usar un criterio para seleccionar el mejor miembro" in {
@@ -28,7 +30,7 @@ class TeamTest extends AnyFlatSpec {
     }
 
     "Un equipo con un item nuevo" should "venderlo si equiparlo no beneficia a ninguno de los miembros" in {
-        val buffMage = Hero(StatBlock(Strength -> 100), job = Mago.some)
+        val buffMage = Hero(baseAttributes = StatBlock(Strength -> 100), job = Mago.some)
 
         assert(Team("", members = Set(buffMage)).getItem(CascoVikingo).earnings == 100)
     }
@@ -38,9 +40,19 @@ class TeamTest extends AnyFlatSpec {
         val midItem = badItem.copy(modifiers = StatBlock(Intelligence -> 2), slot = SingleHand)
         val goodItem = badItem.copy(modifiers = StatBlock(Intelligence -> 3), slot = SingleHand)
 
-        val badlyEquippedMage = Hero(job = Mago.some).equip(badItem, RightHand).flatMap(_.equip(midItem, LeftHand)).get
+        val badlyEquippedMage = mage.equip(badItem, RightHand).flatMap(_.equip(midItem, LeftHand)).get
         val mageTeam = Team("", members = Set(badlyEquippedMage))
 
         assert(mageTeam.getItem(goodItem).members.last.equipment(RightHand) == goodItem)
+    }
+
+    "Un equipo con un item nuevo" should "dárselo a la persona que más se beneficie de el" in {
+        val item = Item(modifiers = StatBlock(Strength -> 10, Intelligence -> 20), slot = Head)
+        val team = Team("", Set(mage, Hero(job = Guerrero.some)))
+
+        val teamWithItem = team.getItem(item)
+
+        assert(teamWithItem.members.find(_.job == Mago.some).get.equippedItems.contains(item))
+        assert(!teamWithItem.members.find(_.job == Guerrero.some).get.equippedItems.contains(item))
     }
 }

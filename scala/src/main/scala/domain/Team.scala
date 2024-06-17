@@ -11,15 +11,12 @@ case class Team(name: String, members: Set[Hero] = Set(), earnings: Int = 0) {
     private def membersThatCanEquip(item: Item): Set[Hero] =
         item.equipCondition.map(condition => members.filter(condition)).getOrElse(members)
 
-    private def membersAndMainStats(people: Set[Hero]): HashMap[Hero, Int] =
-        // TODO: BORRAR?
-        // TODO: Entender notación _*
-        HashMap(members.flatMap(hero => hero.mainStatPoints.map(hero -> _)).toSeq: _*)
-
-    private def memberEquipProjections(people: Set[Hero], item: Item): HashMap[Hero, EquipProjection] = {
-        if item.slot == SingleHand then {
-            val leftHandOutcome = memberEquipProjections(people, item.copy(slot = LeftHand))
-            val rightHandOutcome = memberEquipProjections(people, item.copy(slot = RightHand))
+    private def memberEquipProjections(people: Set[Hero],
+                                       item: Item,
+                                       targetSlot: ItemSlot): HashMap[Hero, EquipProjection] = {
+        if targetSlot == SingleHand then {
+            val leftHandOutcome = memberEquipProjections(people, item, LeftHand)
+            val rightHandOutcome = memberEquipProjections(people, item, RightHand)
 
             return leftHandOutcome.merged(rightHandOutcome) {
                 case ((hero, leftHandProjection), (_, rightHandProjection)) =>
@@ -27,12 +24,13 @@ case class Team(name: String, members: Set[Hero] = Set(), earnings: Int = 0) {
             }
         }
 
-        HashMap(people.map(hero => hero -> hero.withItemEquippedProjection(item, item.slot).get).toSeq: _*)
+        // TODO: Entender notación _*
+        HashMap(people.map(hero => hero -> hero.withItemEquippedProjection(item, targetSlot).get).toSeq: _*)
     }
 
     def getItem(item: Item): Team = {
         val membersToCheck: Set[Hero] = membersThatCanEquip(item)
-        val equipProjections: HashMap[Hero, EquipProjection] = memberEquipProjections(membersToCheck, item)
+        val equipProjections: HashMap[Hero, EquipProjection] = memberEquipProjections(membersToCheck, item, item.slot)
         val bestCandidate: Option[EquipProjection] =
             equipProjections.values.filter(_.pointsDelta > 0).maxByOption(_.pointsDelta)
 
