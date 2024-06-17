@@ -20,19 +20,19 @@ class TeamTest extends AnyFlatSpec {
     }
 
     "Un equipo sin miembros" should "automáticamente vender cualquier item que recibe" in {
-        assert(Team("").getItem(CascoVikingo).earnings == 100)
+        assert(Team("").addItem(CascoVikingo).earnings == 100)
     }
 
     "Un equipo con un item nuevo" should "venderlo si ningún miembro lo puede equipar" in {
         val teamWithWeakHero = Team("", Set(Hero()))
 
-        assert(teamWithWeakHero.getItem(CascoVikingo).earnings == 100)
+        assert(teamWithWeakHero.addItem(CascoVikingo).earnings == 100)
     }
 
     "Un equipo con un item nuevo" should "venderlo si equiparlo no beneficia a ninguno de los miembros" in {
         val buffMage = Hero(baseAttributes = StatBlock(Strength -> 100), job = Mago.some)
 
-        assert(Team("", members = Set(buffMage)).getItem(CascoVikingo).earnings == 100)
+        assert(Team("", members = Set(buffMage)).addItem(CascoVikingo).earnings == 100)
     }
 
     "Un equipo con un item de una sola mano" should "equiparlo en la mano correcta" in {
@@ -43,14 +43,14 @@ class TeamTest extends AnyFlatSpec {
         val badlyEquippedMage = mage.equip(badItem, RightHand).flatMap(_.equip(midItem, LeftHand)).get
         val mageTeam = Team("", members = Set(badlyEquippedMage))
 
-        assert(mageTeam.getItem(goodItem).members.last.equipment(RightHand) == goodItem)
+        assert(mageTeam.addItem(goodItem).members.last.equipment(RightHand) == goodItem)
     }
 
     "Un equipo con un item nuevo" should "dárselo a la persona que más se beneficie de el" in {
         val item = Item(modifiers = StatBlock(Strength -> 10, Intelligence -> 20), slot = Head)
         val team = Team("", Set(mage, Hero(job = Guerrero.some)))
 
-        val teamWithItem = team.getItem(item)
+        val teamWithItem = team.addItem(item)
 
         assert(teamWithItem.members.find(_.job == Mago.some).get.equippedItems.contains(item))
         assert(!teamWithItem.members.find(_.job == Guerrero.some).get.equippedItems.contains(item))

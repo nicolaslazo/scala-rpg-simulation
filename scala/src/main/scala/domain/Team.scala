@@ -28,7 +28,7 @@ case class Team(name: String, members: Set[Hero] = Set(), earnings: Int = 0) {
         HashMap(people.map(hero => hero -> hero.withItemEquippedProjection(item, targetSlot).get).toSeq: _*)
     }
 
-    def getItem(item: Item): Team = {
+    def addItem(item: Item): Team = {
         val equipProjections: HashMap[Hero, EquipProjection] = memberEquipProjections(
             membersThatCanEquip(item),
             item,
