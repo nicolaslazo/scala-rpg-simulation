@@ -1,6 +1,7 @@
 package domain
 
-import domain.ItemSlot.{LeftHand, RightHand, SingleHand}
+import domain.equipment.ItemSlot.{LeftHand, RightHand, SingleHand}
+import domain.equipment.{Item, ItemSlot}
 
 import scala.collection.immutable.HashMap
 

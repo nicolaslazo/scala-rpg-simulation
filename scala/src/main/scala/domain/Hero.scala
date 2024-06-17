@@ -1,7 +1,8 @@
 package domain
 
 import cats.syntax.option.*
-import domain.ItemSlot.*
+import domain.equipment.ItemSlot.*
+import domain.equipment.{CouldNotEquipException, Item, ItemSlot}
 
 import scala.collection.immutable.HashMap
 import scala.util.{Failure, Success, Try}

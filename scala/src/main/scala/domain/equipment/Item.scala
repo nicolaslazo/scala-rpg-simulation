@@ -1,8 +1,9 @@
-package domain
+package domain.equipment
 
 import cats.syntax.option.*
-import domain.ItemSlot.*
+import ItemSlot.*
 import domain.Stat.*
+import domain.*
 
 case class Item(modifiers: StatBlock = StatBlock.empty,
                 equipCondition: Option[Hero => Boolean] = None,
