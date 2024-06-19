@@ -3,6 +3,7 @@ package domain
 import cats.syntax.option.*
 import domain.equipment.ItemSlot.{LeftHand, RightHand, SingleHand}
 import domain.equipment.{EquipProjection, Item, ItemSlot}
+import domain.missions.{Task, TaskFailedException}
 
 import scala.collection.immutable.HashMap
 import scala.util.{Failure, Success, Try}
@@ -37,6 +38,8 @@ case class Team(name: String, members: Set[Hero] = Set(), earnings: Int = 0) {
         then Success(this.copy(members = members - oldMember + newMember))
         else Failure(Exception("El heroe a remover no se encuentra en este equipo"))
 
+    def getGold(amount: Int): Team = this.copy(earnings = earnings + amount)
+
     private def membersThatCanEquip(item: Item): Set[Hero] =
         item.equipCondition.map(condition => members.filter(condition)).getOrElse(members)
 
@@ -56,4 +59,11 @@ case class Team(name: String, members: Set[Hero] = Set(), earnings: Int = 0) {
         // TODO: Entender notación _*
         HashMap(people.map(hero => hero -> hero.withItemEquippedProjection(item, targetSlot).get).toSeq: _*)
     }
+
+    private def bestFor(task: Task): Option[Hero] = members.maxByOption(task.difficultyRating(_, this).toOption)
+
+    def perform(task: Task): Try[Team] =
+        bestFor(task)
+            .map(hero => Success(this.replaceMember(hero, task.effect(hero)).get))
+            .getOrElse(Failure(TaskFailedException("No se pudo encontrar un heroe que pueda hacer la tarea")))
 }
