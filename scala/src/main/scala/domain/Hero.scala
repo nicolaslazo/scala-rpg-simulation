@@ -50,6 +50,9 @@ case class Hero private(baseAttributes: StatBlock,
             case _ => Failure(CouldNotEquipException("No se puede equipar este item en este slot"))
         }
 
+    def applyModifiersOnBaseAttributes(modifiers: StatBlock): Hero =
+        this.copy(baseAttributes = baseAttributes.applyModifiers(modifiers))
+
     // TODO: Delegar el folding a StatBlock
     // Los modifiers se pueden stackear sin conocer el contexto del cálculo general
     // toSet evita que los items que ocupan las dos manos se evalúen dos veces
