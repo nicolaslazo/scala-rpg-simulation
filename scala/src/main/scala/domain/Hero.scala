@@ -53,6 +53,8 @@ case class Hero private(baseAttributes: StatBlock,
     def applyModifiersOnBaseAttributes(modifiers: StatBlock): Hero =
         this.copy(baseAttributes = baseAttributes.applyModifiers(modifiers))
 
+    def changeJob(newJob: Option[Job]): Hero = this.copy(job = newJob)
+
     // TODO: Delegar el folding a StatBlock
     // Los modifiers se pueden stackear sin conocer el contexto del cálculo general
     // toSet evita que los items que ocupan las dos manos se evalúen dos veces

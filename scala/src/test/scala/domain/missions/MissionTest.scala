@@ -1,8 +1,11 @@
 package domain.missions
 
 import cats.syntax.option.*
-import domain.{Hero, Mago, Team}
+import domain.*
+import domain.Stat.Speed
 import org.scalatest.flatspec.AnyFlatSpec
+
+import scala.util.Success
 
 class MissionTest extends AnyFlatSpec {
     private val teamWithMage = Team("", members = Set(Hero(job = Mago.some)))
@@ -23,5 +26,24 @@ class MissionTest extends AnyFlatSpec {
         assert(Mission(List(RobarTalisman))
             .attempt(teamWithMage)
             .isFailure)
+    }
+
+    "Una misión" should "tomar el héroe mejor capacitado para cada tarea" in {
+        val fastUnemployedHero = Hero(StatBlock(Speed -> 100))
+        val thief = Hero(job = Ladron.some)
+        val team = Team("", members = Set(fastUnemployedHero, thief))
+        val teamAfterMission = Mission(List(RobarTalisman)).attempt(team).get
+
+        assert(teamAfterMission.members.filter(_.job.isEmpty).head.talismans.size == 1)
+        assert(teamAfterMission.members.filter(_.job.contains(Ladron)).head.talismans.isEmpty)
+    }
+
+    "Una misión" should "afectar a los héroes entre tareas" in {
+        val turnIntoThief = Task(effect = _.changeJob(Ladron.some),
+            difficultyRating = (_, _) => Success(1),
+            reward = _.getGold(1))
+        val mission = Mission(List(turnIntoThief, RobarTalisman))
+
+        assert(mission.attempt(teamWithMage).isSuccess)
     }
 }
