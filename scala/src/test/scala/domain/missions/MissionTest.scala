@@ -6,7 +6,7 @@ import org.scalatest.flatspec.AnyFlatSpec
 
 class MissionTest extends AnyFlatSpec {
     private val teamWithMage = Team("", members = Set(Hero(job = Mago.some)))
-    
+
     "Una misión" should "ser un éxito si no tiene tareas" in {
         assert(Mission(List()).attempt(Team("")).isSuccess)
     }
