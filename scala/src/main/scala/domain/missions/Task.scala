@@ -26,7 +26,7 @@ object ForzarPuerta extends Task(
 object RobarTalisman extends Task(
     effect = _.equip(Item(slot = Neck), Neck).get,
     difficultyRating = (hero, team) =>
-        if team.leader.map(_.job).contains(Ladron)
+        if team.leader.flatMap(_.job).contains(Ladron)
         then Success(hero.stat(Speed))
         else Failure(TaskFailedException("No se puede robar un talisman si el líder del equipo no es un ladrón")),
     reward = _.getGold(1000))
