@@ -15,7 +15,7 @@ case class Team(name: String, members: Set[Hero] = Set(), earnings: Int = 0) {
 
         if leaderCandidates.getOrElse(Set()).size == 1 then leaderCandidates.get.last.some else None
     }
-    val bestMember: (Hero => Int) => Option[Hero] = members.maxByOption
+    lazy val bestMember: (Hero => Int) => Option[Hero] = members.maxByOption
 
     def addItem(item: Item): Team = {
         val equipProjections: HashMap[Hero, EquipProjection] = memberEquipProjections(
@@ -33,12 +33,26 @@ case class Team(name: String, members: Set[Hero] = Set(), earnings: Int = 0) {
 
     def addMember(hero: Hero): Team = this.copy(members = members + hero)
 
+    def getGold(amount: Int): Team = this.copy(earnings = earnings + amount)
+
+    def perform(task: Task): Try[Team] =
+        bestFor(task)
+            .map(hero => this.replaceMember(hero, task.effect(hero)).get)
+            .map(task.reward(_))
+
     def replaceMember(oldMember: Hero, newMember: Hero): Try[Team] =
         if members.contains(oldMember)
         then Success(this.copy(members = members - oldMember + newMember))
-        else Failure(Exception("El heroe a remover no se encuentra en este equipo"))
+        else Failure(Exception("El héroe a remover no se encuentra en este equipo"))
 
-    def getGold(amount: Int): Team = this.copy(earnings = earnings + amount)
+    private def bestFor(task: Task): Try[Hero] =
+        members
+            .map(hero => hero -> task.difficultyRating(hero, this))
+            .collect { case (hero, Success(diffRatingForHero)) => (hero, diffRatingForHero) }
+            .maxByOption(_._2) match {
+            case Some(hero, _) => Success(hero)
+            case None => Failure(TaskFailedException("No se pudo encontrar un héroe que pueda hacer la tarea"))
+        }
 
     private def membersThatCanEquip(item: Item): Set[Hero] =
         item.equipCondition.map(condition => members.filter(condition)).getOrElse(members)
@@ -56,14 +70,6 @@ case class Team(name: String, members: Set[Hero] = Set(), earnings: Int = 0) {
             }
         }
 
-        // TODO: Entender notación _*
         HashMap(people.map(hero => hero -> hero.withItemEquippedProjection(item, targetSlot).get).toSeq: _*)
     }
-
-    private def bestFor(task: Task): Option[Hero] = members.maxByOption(task.difficultyRating(_, this).toOption)
-
-    def perform(task: Task): Try[Team] =
-        bestFor(task)
-            .map(hero => Success(this.replaceMember(hero, task.effect(hero)).get))
-            .getOrElse(Failure(TaskFailedException("No se pudo encontrar un heroe que pueda hacer la tarea")))
 }
