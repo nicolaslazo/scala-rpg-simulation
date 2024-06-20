@@ -9,11 +9,9 @@ object StatBlock {
 
     def apply(): StatBlock = HashMap.empty[Stat, Int]
 
-    // TODO: Terminar de entender esta sintaxis
     def apply(entries: (Stat, Int)*): StatBlock = HashMap(entries: _*)
 }
 
-// TODO: realmente necesito tener un singleton object Y métodos de extensión para conseguir todo lo que necesito?
 extension (statBlock: StatBlock) {
     def getStat(stat: Stat): Int = statBlock.getOrElse(stat, 0)
 
@@ -22,7 +20,6 @@ extension (statBlock: StatBlock) {
 
     def applyEffect(effect: (StatBlock, Hero) => StatBlock, context: Hero): StatBlock = effect(statBlock, context)
 
-    // TODO: Siento que esto se podría simplificar pero estoy cansado
     def applyEffects(effects: Iterable[(StatBlock, Hero) => StatBlock], context: Hero): StatBlock =
         effects.foldLeft(statBlock)((stats, effect) => stats.applyEffect(effect, context))
 }

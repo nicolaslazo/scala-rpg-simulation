@@ -12,7 +12,7 @@ import scala.util.{Success, Try}
 class HeroTest extends AnyFlatSpec {
     private val mage = Hero(job = Mago.some)
 
-    "Un heroe" should "redondear stats no positivos a 1" in {
+    "Un héroe" should "redondear stats no positivos a 1" in {
         val hero: Hero = Hero(StatBlock(Health -> 2, Strength -> 1, Intelligence -> -1))
 
         assert(hero.stat(Health) === 2)
@@ -21,7 +21,7 @@ class HeroTest extends AnyFlatSpec {
         assert(hero.stat(Intelligence) === 1)
     }
 
-    "Un heroe empleado" should "tener sus stats modificados" in {
+    "Un héroe empleado" should "tener sus stats modificados" in {
         val hero: Hero = Hero(StatBlock(Health -> 1, Strength -> 2, Speed -> 3, Intelligence -> 4), Some(Guerrero))
 
         assert(hero.stat(Health) === 11)
@@ -30,11 +30,11 @@ class HeroTest extends AnyFlatSpec {
         assert(hero.stat(Intelligence) === 1)
     }
 
-    "Un heroe debil" should "ser incapaz de equiparse el casco vikingo" in {
+    "Un héroe debil" should "ser incapaz de equiparse el casco vikingo" in {
         assert(Hero().equip(CascoVikingo, Head).isFailure)
     }
 
-    "Un heroe fuerte" should "ser capaz de equiparse el casco vikingo" in {
+    "Un héroe fuerte" should "ser capaz de equiparse el casco vikingo" in {
         val hero: Hero = Hero(baseAttributes = StatBlock(Strength -> 100))
         val equippedHero: Try[Hero] = hero.equip(CascoVikingo, Head)
 
@@ -42,15 +42,15 @@ class HeroTest extends AnyFlatSpec {
         assert(equippedHero.get.equipment == HashMap(Head -> CascoVikingo))
     }
 
-    "Un heroe" should "ser incapaz de equiparse un casco en el torso" in {
+    "Un héroe" should "ser incapaz de equiparse un casco en el torso" in {
         assert(Hero(baseAttributes = StatBlock(Strength -> 100)).equip(CascoVikingo, Torso).isFailure)
     }
 
-    "Un heroe" should "poder equipar items que checkean su trabajo" in {
+    "Un héroe" should "poder equipar items que checkean su trabajo" in {
         assert(mage.equip(PalitoMagico, LeftHand).isSuccess)
     }
 
-    "Un heroe" should "tener los stats modificados por los items que tiene equipados" in {
+    "Un héroe" should "tener los stats modificados por los items que tiene equipados" in {
         val hero: Try[Hero] = for {
             baseHero <- Success(Hero(baseAttributes = StatBlock(Strength -> 100), job = Some(Mago)))
             heroWithHelmet <- baseHero.equip(CascoVikingo, Head)
@@ -62,11 +62,11 @@ class HeroTest extends AnyFlatSpec {
         assert(hero.get.stat(Intelligence) == 20 + 20) // Mago + PalitoMagico
     }
 
-    "Un heroe" should "ser afectado por items que ocupan las dos manos una sola vez" in {
+    "Un héroe" should "ser afectado por items que ocupan las dos manos una sola vez" in {
         assert(Hero().equip(ArcoViejo, BothHands).map(_.stat(Strength)).getOrElse(0) == 2)
     }
 
-    "Un heroe" should "desequipar cualquier item que requiere dos manos cuando se equipa uno de una sola" in {
+    "Un héroe" should "desequipar cualquier item que requiere dos manos cuando se equipa uno de una sola" in {
         assert(!(for {
             hero <- Try(Hero())
             heroWithBow <- hero.equip(ArcoViejo, BothHands)
@@ -74,7 +74,7 @@ class HeroTest extends AnyFlatSpec {
         } yield heroWithSword.equipment.contains(RightHand)).get)
     }
 
-    "Un heroe" should "ser afectado por los items que equipa" in {
+    "Un héroe" should "ser afectado por los items que equipa" in {
         //        val talismanMage = mage
         //            .equip(TalismanDeDedicacion, Neck)
         //            .flatMap(_.equip(Item(slot = Neck), target = Neck))
@@ -87,15 +87,15 @@ class HeroTest extends AnyFlatSpec {
         //        assert(mage.stat(Intelligence) == 22)
     }
 
-    "Un heroe" should "ser incapaz de equiparse un item en SingleHand" in {
+    "Un héroe" should "ser incapaz de equiparse un item en SingleHand" in {
         assert(Hero().equip(Item(slot = SingleHand), SingleHand).isFailure)
     }
 
-    "Un heroe" should "poder reportar su stat principal" in {
+    "Un héroe" should "poder reportar su stat principal" in {
         assert(Hero(job = Guerrero.some).mainStatPoints.get == 15)
     }
 
-    "Un heroe" should "poder reportar cómo quedaría su stat principal si se equipa un item" in {
+    "Un héroe" should "poder reportar cómo quedaría su stat principal si se equipa un item" in {
         assert(mage.withItemEquippedProjection(PalitoMagico, LeftHand).get.pointsProjection == 40)
     }
 }
