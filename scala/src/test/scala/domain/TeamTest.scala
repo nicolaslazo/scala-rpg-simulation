@@ -1,9 +1,9 @@
 package domain
 
 import cats.syntax.option.*
-import domain.stats.Stat.*
 import domain.equipment.ItemSlot.{Head, LeftHand, RightHand, SingleHand}
 import domain.equipment.{CascoVikingo, Item}
+import domain.stats.Stat.*
 import domain.stats.StatBlock
 import org.scalatest.flatspec.AnyFlatSpec
 

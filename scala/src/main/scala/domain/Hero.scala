@@ -1,9 +1,8 @@
 package domain
 
-import cats.syntax.option.*
 import domain.equipment.ItemSlot.*
 import domain.equipment.{CouldNotEquipException, EquipProjection, Item, ItemSlot}
-import domain.stats.{Stat, StatBlock, applyModifiers, applyEffects}
+import domain.stats.{Stat, StatBlock, applyEffects, applyModifiers}
 
 import scala.collection.immutable.HashMap
 import scala.util.{Failure, Success, Try}
@@ -15,20 +14,31 @@ case class Hero private(baseAttributes: StatBlock,
                         job: Option[Job],
                         equipment: Equipment,
                         talismans: Talismans) {
-    // TODO: Handlear caso en el que se cambia de trabajo y algún equipamiento ya no se puede tener
 
     lazy val stat: Stat => Int = stats.getOrElse(_, 1)
-    lazy val mainStatPoints: Option[Int] = for {
-        unwrappedJob <- job
-        jobMainStat <- unwrappedJob.mainStat.some
-        points = stat(jobMainStat)
-    } yield points
+    lazy val mainStatPoints: Option[Int] = job.map(actualJob => this.stat(actualJob.mainStat))
     private lazy val stats: StatBlock =
         baseAttributes
             .applyModifiers(job.map(_.modifiers).getOrElse(StatBlock.empty))
             .applyModifiers(itemModifiers)
             .applyEffects(itemEffects, this)
             .map((stat, value) => (stat, value.max(1)))
+    private lazy val ensureEquipmentConsistency: Hero =
+        this.copy(
+            equipment = equipment.filter((_, item) => item.equipCondition.forall(_(this))),
+            talismans = talismans.filter(_.equipCondition.forall(_(this))))
+    // Los modifiers se pueden stackear sin conocer el contexto del cálculo general
+    private lazy val itemModifiers: StatBlock =
+        equipment
+            .values
+            .toSet // Para sacar duplicados de items de dos manos
+            .toList
+            .concat(talismans)
+            .map(_.modifiers)
+            .reduceOption((one, other) => one.applyModifiers(other))
+            .getOrElse(StatBlock.empty)
+    private lazy val itemEffects: List[(StatBlock, Hero) => StatBlock] =
+        equipment.values.toSet.toList.concat(talismans).flatMap(_.effect)
     val equippedItems: Set[Item] = equipment.values.toSet.concat(talismans)
 
     def withItemEquippedProjection(item: Item, slot: ItemSlot): Try[EquipProjection] =
@@ -52,28 +62,13 @@ case class Hero private(baseAttributes: StatBlock,
         }
 
     def applyModifiersOnBaseAttributes(modifiers: StatBlock): Hero =
-        this.copy(baseAttributes = baseAttributes.applyModifiers(modifiers))
+        this.copy(baseAttributes = baseAttributes.applyModifiers(modifiers)).ensureEquipmentConsistency
 
-    def changeJob(newJob: Option[Job]): Hero = this.copy(job = newJob)
-
-    // TODO: Delegar el folding a StatBlock
-    // Los modifiers se pueden stackear sin conocer el contexto del cálculo general
-    // toSet evita que los items que ocupan las dos manos se evalúen dos veces
-    private def itemModifiers: StatBlock =
-        equipment
-            .values
-            .toSet
-            .toList
-            .concat(talismans)
-            .map(_.modifiers)
-            .foldLeft(StatBlock.empty)((one, other) => one.applyModifiers(other))
-
-    // TODO: Aplicar al cálculo de stats
-    private def itemEffects: List[(StatBlock, Hero) => StatBlock] =
-        equipment.values.toSet.toList.concat(talismans).flatMap(_.effect)
+    def changeJob(newJob: Option[Job]): Hero = this.copy(job = newJob).ensureEquipmentConsistency
 }
 
 object Hero {
+    // El constructor customizado impide que se creen inventarios inválidos
     def apply(baseAttributes: StatBlock = StatBlock.empty, job: Option[Job] = None): Hero =
         Hero(baseAttributes, job, equipment = new Equipment(), talismans = List())
 }

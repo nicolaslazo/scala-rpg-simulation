@@ -1,9 +1,9 @@
 package domain
 
 import cats.syntax.option.*
-import domain.stats.Stat.*
 import domain.equipment.*
 import domain.equipment.ItemSlot.*
+import domain.stats.Stat.*
 import domain.stats.StatBlock
 import org.scalatest.flatspec.AnyFlatSpec
 
@@ -16,19 +16,19 @@ class HeroTest extends AnyFlatSpec {
     "Un héroe" should "redondear stats no positivos a 1" in {
         val hero: Hero = Hero(StatBlock(Health -> 2, Strength -> 1, Intelligence -> -1))
 
-        assert(hero.stat(Health) === 2)
-        assert(hero.stat(Strength) === 1)
-        assert(hero.stat(Speed) === 1)
-        assert(hero.stat(Intelligence) === 1)
+        assert(hero.stat(Health) == 2)
+        assert(hero.stat(Strength) == 1)
+        assert(hero.stat(Speed) == 1)
+        assert(hero.stat(Intelligence) == 1)
     }
 
     "Un héroe empleado" should "tener sus stats modificados" in {
         val hero: Hero = Hero(StatBlock(Health -> 1, Strength -> 2, Speed -> 3, Intelligence -> 4), Some(Guerrero))
 
-        assert(hero.stat(Health) === 11)
-        assert(hero.stat(Strength) === 17)
-        assert(hero.stat(Speed) === 3)
-        assert(hero.stat(Intelligence) === 1)
+        assert(hero.stat(Health) == 11)
+        assert(hero.stat(Strength) == 17)
+        assert(hero.stat(Speed) == 3)
+        assert(hero.stat(Intelligence) == 1)
     }
 
     "Un héroe debil" should "ser incapaz de equiparse el casco vikingo" in {
@@ -76,16 +76,38 @@ class HeroTest extends AnyFlatSpec {
     }
 
     "Un héroe" should "ser afectado por los items que equipa" in {
-        //        val talismanMage = mage
-        //            .equip(TalismanDeDedicacion, Neck)
-        //            .flatMap(_.equip(Item(slot = Neck), target = Neck))
-        //            .get
+        val cursedMage = mage.equip(TalismanMaldito, Neck).get
 
-        // TODO: Arreglar
-        //        assert(mage.stat(Health) == 2)
-        //        assert(mage.stat(Strength) == -18)
-        //        assert(mage.stat(Speed) == 2)
-        //        assert(mage.stat(Intelligence) == 22)
+        assert(cursedMage.stat(Health) == 1)
+        assert(cursedMage.stat(Strength) == 1)
+        assert(cursedMage.stat(Speed) == 1)
+        assert(cursedMage.stat(Intelligence) == 1)
+    }
+
+    "Un héroe" should "poder equipar el talismán de dedicación" in {
+        // Este item en particular me estaba causando problemas
+        val talismanMage = mage
+            .equip(TalismanDeDedicacion, Neck)
+            .get
+
+        // TODO: Este test se cuelga en la evaluación del efecto del TalismanDeDedicacion
+        assert(talismanMage.stat(Health) == 2)
+        assert(talismanMage.stat(Strength) == -18)
+        assert(talismanMage.stat(Speed) == 2)
+        assert(talismanMage.stat(Intelligence) == 22)
+    }
+
+    "Un héroe" should "ser afectado por la vincha del búfalo de agua" in {
+        val heroWithHeadband = Hero().equip(VinchaDelBufaloDeAgua, Head).get
+
+        assert(Hero().equip(VinchaDelBufaloDeAgua, Head).get.stat(Health) == 10)
+        assert(Hero().equip(VinchaDelBufaloDeAgua, Head).get.stat(Strength) == 10)
+        assert(Hero().equip(VinchaDelBufaloDeAgua, Head).get.stat(Speed) == 10)
+        assert(Hero().equip(VinchaDelBufaloDeAgua, Head).get.stat(Intelligence) == 1)
+    }
+
+    "Un héroe fuerte" should "ser afectado por la vincha del búfalo de agua" in {
+        assert(Hero(StatBlock(Strength -> 1)).equip(VinchaDelBufaloDeAgua, Head).get.stat(Intelligence) == 30)
     }
 
     "Un héroe" should "ser incapaz de equiparse un item en SingleHand" in {
@@ -98,5 +120,18 @@ class HeroTest extends AnyFlatSpec {
 
     "Un héroe" should "poder reportar cómo quedaría su stat principal si se equipa un item" in {
         assert(mage.withItemEquippedProjection(PalitoMagico, LeftHand).get.pointsProjection == 40)
+    }
+
+    "Un héroe" should "poder cambiar su trabajo" in {
+        assert(mage.changeJob(Ladron.some).job.contains(Ladron))
+    }
+
+    "Un héroe" should "desequiparse cualquier item que ya no puede usar después de cambiar trabajo" in {
+        assert(mage
+            .equip(Item(equipCondition = Some(_.job.contains(Mago)), slot = Neck), target = Neck)
+            .get
+            .changeJob(None)
+            .talismans
+            .isEmpty)
     }
 }

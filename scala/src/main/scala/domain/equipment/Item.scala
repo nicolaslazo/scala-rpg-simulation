@@ -1,10 +1,9 @@
 package domain.equipment
 
-import cats.syntax.option.*
 import domain.*
-import domain.stats.Stat.*
 import domain.equipment.ItemSlot.*
-import domain.stats.StatBlock
+import domain.stats.*
+import domain.stats.Stat.*
 
 case class Item(modifiers: StatBlock = StatBlock.empty,
                 equipCondition: Option[Hero => Boolean] = None,
@@ -29,33 +28,34 @@ object PalitoMagico extends Item(
 
 object ArcoViejo extends Item(modifiers = StatBlock(Strength -> 2), slot = BothHands)
 
-// TODO: Arreglar
-//object TalismanDeDedicacion extends Item(
-//    effect = Some(
-//        (currentStats, hero) => {
-//            // TODO: Hay alguna manera más idiomática de escribir esto?
-//            //            val bonus: Int = hero.job.map(_.mainStat).map(currentStats.getStat).map(_ * .1).map(_.toInt).getOrElse(0)
-////            val bonus: Int = hero.mainStatPoints.map(_._2).getOrElse(0)
-//
-////            currentStats.map((stat, value) => (stat, value + bonus))
-//        }
-//    ),
-//    slot = Neck)
+object TalismanDeDedicacion extends Item(
+    effect = Some(
+        (currentStats, hero) => {
+            val bonus = hero
+                .mainStatPoints
+                .map(_.*(.1).toInt)
+                .getOrElse(0)
+
+            currentStats.applyModifiers(StatBlock(Stat.values.map(_ -> bonus): _*))
+        }
+    ),
+    slot = Neck)
 
 object TalismanDelMinimalismo extends Item(
     modifiers = StatBlock(Health -> 60), // +10 que lo mencionado en consigna para considerar el talisman en sí
-    effect = Some((currentStats, hero) =>
-        currentStats.updatedWith(Health)(value => Some(value.getOrElse(0).-(10 * hero.equippedItems.size)))),
+    effect =
+        Some((currentStats, hero) => currentStats.applyModifiers(StatBlock(Health -> -10 * hero.equippedItems.size))),
     slot = Neck)
 
 object VinchaDelBufaloDeAgua extends Item(
     equipCondition = Some(_.job.isEmpty),
-    effect = Some((currentStats, _) =>
-        if (for (str <- currentStats.get(Strength); int <- currentStats.get(Intelligence)) yield str > int)
-            .getOrElse(false)
-        then currentStats.updatedWith(Intelligence)(_.getOrElse(0).+(30).some)
-        else currentStats.map((k, v) => if k == Intelligence then (k, v) else (k, v + 10))),
-    slot = Head)
+    effect = Some((currentStats: StatBlock, _: Hero) =>
+        if currentStats.getStat(Strength) > currentStats.getStat(Intelligence)
+        then currentStats.applyModifiers(StatBlock(Intelligence -> 30))
+        else currentStats.applyModifiers(StatBlock(Health -> 10, Strength -> 10, Speed -> 10))
+    ),
+    slot = Head
+)
 
 object TalismanMaldito extends Item(
     effect = Some((_, _) => StatBlock(Health -> 1, Strength -> 1, Speed -> 1, Intelligence -> 1)),

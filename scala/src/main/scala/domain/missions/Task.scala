@@ -1,9 +1,9 @@
 package domain.missions
 
 import domain.*
-import domain.stats.Stat.*
 import domain.equipment.Item
 import domain.equipment.ItemSlot.Neck
+import domain.stats.Stat.*
 import domain.stats.StatBlock
 
 import scala.util.{Failure, Success, Try}
