@@ -1,9 +1,10 @@
 package domain
 
 import cats.syntax.option.*
-import domain.Stat.*
+import domain.stats.Stat.*
 import domain.equipment.ItemSlot.{Head, LeftHand, RightHand, SingleHand}
 import domain.equipment.{CascoVikingo, Item}
+import domain.stats.StatBlock
 import org.scalatest.flatspec.AnyFlatSpec
 
 val mage: Hero = Hero(job = Mago.some)

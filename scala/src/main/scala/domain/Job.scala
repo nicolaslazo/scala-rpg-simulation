@@ -1,6 +1,7 @@
 package domain
 
-import domain.Stat.*
+import domain.stats.{Stat, StatBlock}
+import domain.stats.Stat.*
 
 case class Job(modifiers: StatBlock, mainStat: Stat)
 

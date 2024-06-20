@@ -1,4 +1,7 @@
-package domain
+package domain.stats
+
+import domain.Hero
+import domain.stats.Stat
 
 import scala.collection.immutable.HashMap
 

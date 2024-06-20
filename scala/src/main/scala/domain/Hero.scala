@@ -3,6 +3,7 @@ package domain
 import cats.syntax.option.*
 import domain.equipment.ItemSlot.*
 import domain.equipment.{CouldNotEquipException, EquipProjection, Item, ItemSlot}
+import domain.stats.{Stat, StatBlock, applyModifiers, applyEffects}
 
 import scala.collection.immutable.HashMap
 import scala.util.{Failure, Success, Try}

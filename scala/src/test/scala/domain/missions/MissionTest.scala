@@ -2,7 +2,8 @@ package domain.missions
 
 import cats.syntax.option.*
 import domain.*
-import domain.Stat.Speed
+import domain.stats.Stat.Speed
+import domain.stats.StatBlock
 import org.scalatest.flatspec.AnyFlatSpec
 
 import scala.util.Success

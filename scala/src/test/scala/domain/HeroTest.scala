@@ -1,9 +1,10 @@
 package domain
 
 import cats.syntax.option.*
-import domain.Stat.*
+import domain.stats.Stat.*
 import domain.equipment.*
 import domain.equipment.ItemSlot.*
+import domain.stats.StatBlock
 import org.scalatest.flatspec.AnyFlatSpec
 
 import scala.collection.immutable.HashMap
