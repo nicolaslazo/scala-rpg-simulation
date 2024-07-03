@@ -23,7 +23,7 @@ case class Tavern(missions: Set[Mission]) {
     }
 
     private def doBestMission(team: Team, criteria: MissionPickCriteria): Try[(Mission, Team)] =
-        // bestMissionFor garantiza el equipo puede hacerla
+        // bestMissionFor garantiza que el equipo puede hacerla
         bestMissionFor(team, criteria)
             .map(mission => Success(mission -> mission.attempt(team).get))
             .getOrElse(Failure(TrainingFailedException("El equipo no puede hacer ninguna de las misiones disponibles")))

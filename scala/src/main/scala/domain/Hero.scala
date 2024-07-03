@@ -16,12 +16,11 @@ case class Hero private(baseAttributes: StatBlock,
                         talismans: Talismans) {
 
     lazy val stat: Stat => Int = stats.getOrElse(_, 1)
-    lazy val mainStatPoints: Option[Int] = job.map(actualJob => this.stat(actualJob.mainStat))
     private lazy val stats: StatBlock =
         baseAttributes
             .applyModifiers(job.map(_.modifiers).getOrElse(StatBlock.empty))
             .applyModifiers(itemModifiers)
-            .applyEffects(itemEffects, this)
+            .applyEffects(itemEffects, this.strippedDownVersion)
             .map((stat, value) => (stat, value.max(1)))
     private lazy val ensureEquipmentConsistency: Hero =
         this.copy(
@@ -39,7 +38,10 @@ case class Hero private(baseAttributes: StatBlock,
             .getOrElse(StatBlock.empty)
     private lazy val itemEffects: List[(StatBlock, Hero) => StatBlock] =
         equipment.values.toSet.toList.concat(talismans).flatMap(_.effect)
-    val equippedItems: Set[Item] = equipment.values.toSet.concat(talismans)
+    private lazy val strippedDownVersion: Hero = this.copy(equipment = new Equipment(), talismans = List())
+    lazy val equippedItems: Set[Item] = equipment.values.toSet.concat(talismans)
+
+    lazy val mainStatPoints: Option[Int] = job.map(actualJob => this.stat(actualJob.mainStat))
 
     def withItemEquippedProjection(item: Item, slot: ItemSlot): Try[EquipProjection] =
         this.equip(item, slot).map(EquipProjection(this, _, slot))

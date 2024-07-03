@@ -84,15 +84,11 @@ class HeroTest extends AnyFlatSpec {
         assert(cursedMage.stat(Intelligence) == 1)
     }
 
-    "Un héroe" should "poder equipar el talismán de dedicación" in {
-        // Este item en particular me estaba causando problemas
-        val talismanMage = mage
-            .equip(TalismanDeDedicacion, Neck)
-            .get
+    "Un héroe" should "poder equipar un ítem que requiere leer sus atributos sin ítems" in {
+        val talismanMage = mage.equip(TalismanDeDedicacion, Neck).get
 
-        // TODO: Este test se cuelga en la evaluación del efecto del TalismanDeDedicacion
         assert(talismanMage.stat(Health) == 2)
-        assert(talismanMage.stat(Strength) == -18)
+        assert(talismanMage.stat(Strength) == 1)
         assert(talismanMage.stat(Speed) == 2)
         assert(talismanMage.stat(Intelligence) == 22)
     }
