@@ -9,7 +9,9 @@ case class Item(modifiers: StatBlock = StatBlock.empty,
                 equipCondition: Option[Hero => Boolean] = None,
                 effect: Option[(StatBlock, Hero) => StatBlock] = None,
                 value: Int = 0,
-                slot: ItemSlot)
+                slot: ItemSlot) {
+    def canBeEquippedBy(hero: Hero): Boolean = equipCondition.forall(_(hero))
+}
 
 object CascoVikingo extends Item(
     modifiers = StatBlock(Health -> 10),

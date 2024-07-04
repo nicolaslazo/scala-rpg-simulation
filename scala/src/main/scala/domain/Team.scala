@@ -13,13 +13,13 @@ case class Team(name: String, members: Set[Hero] = Set(), earnings: Int = 0) {
         val maxMainStat = members.map(_.mainStatPoints).maxOption
         val leaderCandidates = maxMainStat.map(maxPoints => members.filter(_.mainStatPoints == maxPoints))
 
-        if leaderCandidates.getOrElse(Set()).size == 1 then leaderCandidates.get.last.some else None
+        if leaderCandidates.map(_.size).contains(1) then leaderCandidates.get.last.some else None
     }
     lazy val bestMember: (Hero => Int) => Option[Hero] = members.maxByOption
 
     def addItem(item: Item): Team = {
         val equipProjections: HashMap[Hero, EquipProjection] = memberEquipProjections(
-            membersThatCanEquip(item),
+            members,
             item,
             item.slot)
         val bestCandidate: Option[EquipProjection] =
@@ -54,9 +54,6 @@ case class Team(name: String, members: Set[Hero] = Set(), earnings: Int = 0) {
             case None => Failure(TaskFailedException("No se pudo encontrar un héroe que pueda hacer la tarea"))
         }
 
-    private def membersThatCanEquip(item: Item): Set[Hero] =
-        item.equipCondition.map(condition => members.filter(condition)).getOrElse(members)
-
     private def memberEquipProjections(people: Set[Hero],
                                        item: Item,
                                        targetSlot: ItemSlot): HashMap[Hero, EquipProjection] = {
@@ -70,6 +67,9 @@ case class Team(name: String, members: Set[Hero] = Set(), earnings: Int = 0) {
             }
         }
 
-        HashMap(people.map(hero => hero -> hero.withItemEquippedProjection(item, targetSlot).get).toSeq: _*)
+        HashMap(
+            people.collect {
+                case hero if item.canBeEquippedBy(hero) => hero -> hero.withItemEquippedProjection(item, targetSlot).get
+            }.toSeq: _*)
     }
 }
