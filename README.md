@@ -1,17 +1,12 @@
 # Scala RPG Simulation
 
-This was the second of the two assignments for the Advanced Programming Techniques
-course at the National Technological University of Buenos Aires, first term of 2024.
+[![🇦🇷 Leer en Español](https://img.shields.io/badge/🇦🇷-Leer%20en%20español-blue)](README.es.md)
 
-This was meant to be a group project, but by that time in the semester, my teammates
-had dropped out of the class. I completed it with close supervision from one of the
-PAs.
+This was the second of the two assignments for the Advanced Programming Techniques course at the National Technological University of Buenos Aires, first term of 2024.
 
-I found this project to be profoundly enjoyable. From the start, I challenged myself
-to write it entirely without declaring a single mutable variable. The implementation
-went through multiple iterations, through which I could witness my codebase get
-increasingly simpler. I also took to Scala's monadic way of thinking, which would
-prepare me to later adopt Rust's type system without much struggle.
+This was meant to be a group project, but by that time in the semester, my teammates had dropped out of the class. I completed it with close supervision from one of the PAs.
+
+I found this project to be profoundly enjoyable. From the start, I challenged myself to write it entirely without declaring a single mutable variable. The implementation went through multiple iterations, through which I could witness my codebase get increasingly simpler. I also took to Scala's monadic way of thinking, which would prepare me to later adopt Rust's type system without much struggle.
 
 The original assignment is transcribed below, translated into English.
 
